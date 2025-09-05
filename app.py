@@ -129,21 +129,142 @@ with col3:
     st.metric("Wavelength", f"λ = {2*L/n:.3f}")
 
 # Additional information
-with st.expander("📚 Learn More"):
+with st.expander("📚 Learn More - Detailed Physics"):
     st.markdown("""
-    ### Physical Interpretation
+    ### 📐 Complete Derivation from Schrödinger Equation
     
-    - **ψₙ(x)** (blue): The quantum wavefunction - represents the quantum state
-    - **|ψₙ(x)|²** (red): Probability density - likelihood of finding the particle at position x
-    - **Gray walls**: Infinite potential barriers (particle cannot exist outside)
-    - **n**: Quantum number - determines the energy level and number of nodes
+    #### 1. Time-Independent Schrödinger Equation
+    For a particle of mass m in a potential V(x), the time-independent Schrödinger equation is:
+    """)
     
-    ### Key Observations
+    st.latex(r"-\frac{\hbar^2}{2m}\frac{d^2\psi}{dx^2} + V(x)\psi = E\psi")
     
-    1. Higher n → more nodes in the wavefunction
-    2. The particle can never be found at the walls (ψ = 0 at x = 0 and x = L)
-    3. Energy increases as n² (quadratically)
-    4. The ground state (n=1) has no nodes inside the box
+    st.markdown("""
+    #### 2. The Infinite Square Well Potential
+    - Inside the box (0 < x < L): V(x) = 0
+    - Outside the box: V(x) = ∞
+    
+    Since V = ∞ outside, ψ(x) = 0 for x ≤ 0 and x ≥ L (particle cannot exist there).
+    
+    #### 3. Solving Inside the Box
+    For 0 < x < L, where V = 0, the equation becomes:
+    """)
+    
+    st.latex(r"-\frac{\hbar^2}{2m}\frac{d^2\psi}{dx^2} = E\psi")
+    
+    st.markdown("Rearranging:")
+    
+    st.latex(r"\frac{d^2\psi}{dx^2} = -\frac{2mE}{\hbar^2}\psi = -k^2\psi")
+    
+    st.markdown("where we define:")
+    
+    st.latex(r"k = \sqrt{\frac{2mE}{\hbar^2}}")
+    
+    st.markdown("""
+    #### 4. General Solution
+    The general solution to this differential equation is:
+    """)
+    
+    st.latex(r"\psi(x) = A\sin(kx) + B\cos(kx)")
+    
+    st.markdown("""
+    #### 5. Applying Boundary Conditions
+    
+    **Boundary condition 1:** ψ(0) = 0
+    """)
+    
+    st.latex(r"\psi(0) = A\sin(0) + B\cos(0) = B = 0")
+    
+    st.markdown("Therefore B = 0, and:")
+    
+    st.latex(r"\psi(x) = A\sin(kx)")
+    
+    st.markdown("**Boundary condition 2:** ψ(L) = 0")
+    
+    st.latex(r"\psi(L) = A\sin(kL) = 0")
+    
+    st.markdown("""
+    Since A ≠ 0 (otherwise ψ = 0 everywhere), we need sin(kL) = 0.
+    This happens when:
+    """)
+    
+    st.latex(r"kL = n\pi, \quad n = 1, 2, 3, ...")
+    
+    st.markdown("""
+    #### 6. Quantization Emerges!
+    From kL = nπ, we get:
+    """)
+    
+    st.latex(r"k = \frac{n\pi}{L}")
+    
+    st.markdown("Substituting back into the definition of k:")
+    
+    st.latex(r"\sqrt{\frac{2mE}{\hbar^2}} = \frac{n\pi}{L}")
+    
+    st.markdown("Solving for E:")
+    
+    st.latex(r"E_n = \frac{n^2\pi^2\hbar^2}{2mL^2}")
+    
+    st.markdown("""
+    **This is quantization!** Energy can only take discrete values determined by the quantum number n.
+    
+    #### 7. Normalizing the Wavefunction
+    The wavefunction must be normalized:
+    """)
+    
+    st.latex(r"\int_0^L |\psi(x)|^2 dx = 1")
+    
+    st.latex(r"\int_0^L A^2\sin^2\left(\frac{n\pi x}{L}\right) dx = 1")
+    
+    st.markdown("Using the integral identity ∫sin²(ax)dx = x/2 - sin(2ax)/(4a), we get:")
+    
+    st.latex(r"A^2 \cdot \frac{L}{2} = 1")
+    
+    st.latex(r"A = \sqrt{\frac{2}{L}}")
+    
+    st.markdown("""
+    #### 8. Final Wavefunction
+    The normalized energy eigenfunctions are:
+    """)
+    
+    st.latex(r"\psi_n(x) = \sqrt{\frac{2}{L}}\sin\left(\frac{n\pi x}{L}\right)")
+    
+    st.markdown("""
+    ---
+    ### 🌊 About the Wavelength
+    
+    The de Broglie wavelength λ is related to momentum p by:
+    """)
+    
+    st.latex(r"\lambda = \frac{h}{p} = \frac{2\pi\hbar}{p}")
+    
+    st.markdown("From the energy-momentum relation for a free particle:")
+    
+    st.latex(r"E = \frac{p^2}{2m}")
+    
+    st.markdown("We can express momentum as:")
+    
+    st.latex(r"p = \sqrt{2mE} = \sqrt{2m \cdot \frac{n^2\pi^2\hbar^2}{2mL^2}} = \frac{n\pi\hbar}{L}")
+    
+    st.markdown("Therefore, the de Broglie wavelength is:")
+    
+    st.latex(r"\lambda = \frac{2\pi\hbar}{p} = \frac{2\pi\hbar}{\frac{n\pi\hbar}{L}} = \frac{2L}{n}")
+    
+    st.markdown(f"""
+    **For the current state (n = {n}):** λ = {2*L/n:.3f}
+    
+    Notice that L = nλ/2, meaning the box length is exactly n half-wavelengths!
+    """)
+    
+    st.markdown("""
+    ---
+    ### 🎯 Key Physical Insights
+    
+    1. **Quantization Origin**: Boundary conditions (ψ = 0 at walls) restrict k to discrete values
+    2. **Zero-Point Energy**: The lowest energy is n=1, not zero (E₁ = π²ℏ²/2mL²)
+    3. **Node Pattern**: State n has (n-1) nodes inside the box
+    4. **Orthogonality**: Different eigenstates are orthogonal: ∫ψₙψₘdx = 0 if n ≠ m
+    5. **Uncertainty Principle**: As L decreases, E increases (confinement increases momentum uncertainty)
     """)
 
 st.markdown("---")
