@@ -3,7 +3,6 @@ import numpy as np
 import plotly.graph_objects as go
 from scipy.special import hermite
 from math import factorial  # Using math.factorial which is standard
-
 # Page config
 st.set_page_config(page_title="Quantum Mechanics Visualizer", page_icon="⚛️", layout="wide")
 
@@ -493,11 +492,11 @@ with tab3:
         psi_squared = psi**2
         
         # Verify normalization (should be close to 1)
-        norm_check = np.trapz(psi_squared, x)
+        norm_check = np.trapezoid(psi_squared, x)
         
-        # Normalize for display (scale to fit nicely with potential)
-        psi_display = psi * 0.3 * E_n / np.max(np.abs(psi)) + E_n
-        psi_squared_display = psi_squared * 0.3 * E_n / np.max(psi_squared) + E_n
+        amplitude_scale = min(0.5, E_n * 0.3)  # Adaptive scaling
+        psi_display = psi * amplitude_scale + E_n
+        psi_squared_display = psi_squared * amplitude_scale + E_n
         
         # Create plot
         fig_1d = go.Figure()
