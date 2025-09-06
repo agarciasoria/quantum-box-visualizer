@@ -467,7 +467,7 @@ with tab3:
             Where δ_nm is the Kronecker delta (1 if n=m, 0 otherwise).
             """)
         
-        # Physics calculations with CORRECT normalization
+                # Physics calculations with CORRECT normalization
         # Using natural units where ℏ = m = 1
         x0 = np.sqrt(1/omega)  # characteristic length
         E_n = omega * (n + 0.5)
@@ -482,7 +482,7 @@ with tab3:
         # Potential
         V = 0.5 * omega * x**2
         
-        # Hermite polynomial and wavefunction with CORRECT normalization
+        # Hermite polynomial and wavefunction
         H_n = hermite(n)
         
         # Correct normalization factor
@@ -491,12 +491,19 @@ with tab3:
         psi = norm_factor * H_n(xi) * np.exp(-xi**2 / 2)
         psi_squared = psi**2
         
-        # Verify normalization (should be close to 1)
-        norm_check = np.trapezoid(psi_squared, x)
+        # Verify normalization
+        norm_check = np.trapz(psi_squared, x)
         
-        amplitude_scale = min(0.5, E_n * 0.3)  # Adaptive scaling
-        psi_display = psi * amplitude_scale + E_n
-        psi_squared_display = psi_squared * amplitude_scale + E_n
+        # IMPORTANT: Show actual probability density values
+        st.write(f"**Actual max |ψ|² = {np.max(psi_squared):.4f}** (this CAN be > 1 for a density)")
+        st.write(f"**Integral ∫|ψ|²dx = {norm_check:.6f}** (this MUST be ≈ 1)")
+        
+        # For display, we shift to energy level but keep proportions clear
+        # Scale factor chosen so the display is readable
+        display_scale = 0.3  # This is just for visual height
+        
+        psi_display = psi * display_scale + E_n
+        psi_squared_display = psi_squared * display_scale + E_n
         
         # Create plot
         fig_1d = go.Figure()
@@ -522,13 +529,16 @@ with tab3:
                             fillcolor="rgba(255,0,0,0.1)", line=dict(width=0))
         
         # Wavefunction (shifted to energy level)
-        fig_1d.add_trace(go.Scatter(x=x, y=psi_display, name=f"ψ_{n}(x)",
+        fig_1d.add_trace(go.Scatter(x=x, y=psi_display, 
+                                   name=f"ψ_{n}(x) [scaled for display]",
                                    line=dict(color='blue', width=2)))
         
         # Probability density
         if show_probability:
-            fig_1d.add_trace(go.Scatter(x=x, y=psi_squared_display, name=f"|ψ_{n}(x)|²",
-                                       line=dict(color='red', width=2), fill='tonexty'))
+            fig_1d.add_trace(go.Scatter(x=x, y=psi_squared_display, 
+                                       name=f"|ψ_{n}(x)|² [scaled for display]",
+                                       line=dict(color='red', width=2), 
+                                       fill='tonexty'))
         
         # Style
         fig_1d.update_layout(
