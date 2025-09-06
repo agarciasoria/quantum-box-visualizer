@@ -375,38 +375,102 @@ with tab3:
             show_classical = st.checkbox("Show classical turning points", value=True)
             show_probability = st.checkbox("Show |ψ|²", value=True)
         
-        # Show equations
-        with st.expander("📐 Mathematical Description", expanded=True):
+        # Show detailed mathematical derivation
+        with st.expander("📐 Complete Mathematical Derivation", expanded=True):
             st.markdown("### The Quantum Harmonic Oscillator")
             
+            st.markdown("""
+            #### 1. The Schrödinger Equation
+            
+            Starting with the time-independent Schrödinger equation for a particle in a potential V(x):
+            """)
+            
+            st.latex(r"-\frac{\hbar^2}{2m}\frac{d^2\psi}{dx^2} + V(x)\psi = E\psi")
+            
+            st.markdown("For the harmonic oscillator:")
+            st.latex(r"V(x) = \frac{1}{2}m\omega^2 x^2")
+            
+            st.markdown("""
+            #### 2. Change to Dimensionless Variables
+            
+            Define the characteristic length and energy scales:
+            """)
+            
             col1, col2 = st.columns(2)
-            
             with col1:
-                st.markdown("**Potential Energy:**")
-                st.latex(r"V(x) = \frac{1}{2}m\omega^2 x^2")
-                
-                st.markdown("**Schrödinger Equation:**")
-                st.latex(r"-\frac{\hbar^2}{2m}\frac{d^2\psi}{dx^2} + \frac{1}{2}m\omega^2 x^2\psi = E\psi")
-            
+                st.latex(r"x_0 = \sqrt{\frac{\hbar}{m\omega}}")
+                st.caption("Characteristic length")
             with col2:
-                st.markdown("**Energy Eigenvalues:**")
-                st.latex(r"E_n = \hbar\omega\left(n + \frac{1}{2}\right)")
-                
-                st.markdown("**Ground State Energy:**")
-                st.latex(r"E_0 = \frac{1}{2}\hbar\omega")
+                st.latex(r"E_0 = \hbar\omega")
+                st.caption("Characteristic energy")
             
-            st.markdown("### Wavefunctions")
+            st.markdown("Introduce dimensionless variables:")
+            st.latex(r"\xi = \frac{x}{x_0}, \quad \epsilon = \frac{E}{\hbar\omega}")
+            
+            st.markdown("The Schrödinger equation becomes:")
+            st.latex(r"\frac{d^2\psi}{d\xi^2} + (2\epsilon - \xi^2)\psi = 0")
+            
+            st.markdown("""
+            #### 3. Asymptotic Behavior
+            
+            For large |ξ|, the equation approximates to:
+            """)
+            st.latex(r"\frac{d^2\psi}{d\xi^2} - \xi^2\psi \approx 0")
+            
+            st.markdown("Which has asymptotic solution:")
+            st.latex(r"\psi \sim e^{-\xi^2/2} \quad \text{as} \quad |\xi| \to \infty")
+            
+            st.markdown("""
+            #### 4. Factoring Out Gaussian
+            
+            Based on the asymptotic behavior, we write:
+            """)
+            st.latex(r"\psi(\xi) = H(\xi) e^{-\xi^2/2}")
+            
+            st.markdown("Substituting into the Schrödinger equation gives:")
+            st.latex(r"\frac{d^2H}{d\xi^2} - 2\xi\frac{dH}{d\xi} + (2\epsilon - 1)H = 0")
+            
+            st.markdown("""
+            #### 5. Series Solution and Hermite Polynomials
+            
+            For the solution to be normalizable, H(ξ) must be a polynomial. This happens when:
+            """)
+            st.latex(r"2\epsilon - 1 = 2n \quad \Rightarrow \quad \epsilon = n + \frac{1}{2}")
+            
+            st.markdown("Therefore:")
+            st.latex(r"E_n = \hbar\omega\left(n + \frac{1}{2}\right), \quad n = 0, 1, 2, ...")
+            
+            st.markdown("""
+            The polynomial solutions are the Hermite polynomials H_n(ξ).
+            
+            #### 6. Normalized Wavefunctions
+            
+            The properly normalized wavefunctions are:
+            """)
             st.latex(r"\psi_n(x) = \left(\frac{m\omega}{\pi\hbar}\right)^{1/4} \frac{1}{\sqrt{2^n n!}} H_n\left(\sqrt{\frac{m\omega}{\hbar}}x\right) \exp\left(-\frac{m\omega x^2}{2\hbar}\right)")
             
             st.markdown("""
-            Where:
-            - H_n are Hermite polynomials
-            - The characteristic length scale is: x₀ = √(ℏ/mω)
-            - Classical turning points at: x = ±√(2E/mω²)
+            #### 7. First Few Hermite Polynomials
+            
+            - H₀(ξ) = 1
+            - H₁(ξ) = 2ξ
+            - H₂(ξ) = 4ξ² - 2
+            - H₃(ξ) = 8ξ³ - 12ξ
+            - H₄(ξ) = 16ξ⁴ - 48ξ² + 12
+            
+            #### 8. Orthonormality
+            
+            The wavefunctions satisfy:
+            """)
+            st.latex(r"\int_{-\infty}^{\infty} \psi_n^*(x)\psi_m(x)dx = \delta_{nm}")
+            
+            st.markdown("""
+            Where δ_nm is the Kronecker delta (1 if n=m, 0 otherwise).
             """)
         
-        # Physics calculations (using natural units where ℏ = m = 1)
-        x0 = np.sqrt(1/(omega))  # characteristic length
+        # Physics calculations with CORRECT normalization
+        # Using natural units where ℏ = m = 1
+        x0 = np.sqrt(1/omega)  # characteristic length
         E_n = omega * (n + 0.5)
         
         # Classical turning points
@@ -417,18 +481,23 @@ with tab3:
         x = np.linspace(-x_max, x_max, 1000)
         
         # Potential
-        V = 0.5 * omega**2 * x**2
+        V = 0.5 * omega * x**2
         
-        # Hermite polynomial and wavefunction
+        # Hermite polynomial and wavefunction with CORRECT normalization
         H_n = hermite(n)
-        prefactor = (omega/np.pi)**0.25 / np.sqrt(2**n * factorial(n))
+        
+        # Correct normalization factor
+        norm_factor = np.sqrt(np.sqrt(omega/np.pi) / (2**n * factorial(n)))
         xi = np.sqrt(omega) * x
-        psi = prefactor * H_n(xi) * np.exp(-xi**2 / 2)
+        psi = norm_factor * H_n(xi) * np.exp(-xi**2 / 2)
         psi_squared = psi**2
         
+        # Verify normalization (should be close to 1)
+        norm_check = np.trapz(psi_squared, x)
+        
         # Normalize for display (scale to fit nicely with potential)
-        psi_display = psi * 0.5 * E_n / np.max(np.abs(psi)) + E_n
-        psi_squared_display = psi_squared * 0.5 * E_n / np.max(psi_squared) + E_n
+        psi_display = psi * 0.3 * E_n / np.max(np.abs(psi)) + E_n
+        psi_squared_display = psi_squared * 0.3 * E_n / np.max(psi_squared) + E_n
         
         # Create plot
         fig_1d = go.Figure()
@@ -480,9 +549,22 @@ with tab3:
         with col2:
             st.metric("Zero-point energy", f"E₀ = {omega/2:.3f}")
         with col3:
-            st.metric("Level spacing", f"ΔE = {omega:.3f}")
+            st.metric("Normalization", f"∫|ψ|²dx = {norm_check:.3f}")
         with col4:
             st.metric("Classical extent", f"±{x_turn:.3f}")
+        
+        # Show actual probability density values
+        with st.expander("📊 Probability Density Analysis"):
+            max_prob = np.max(psi_squared)
+            max_prob_x = x[np.argmax(psi_squared)]
+            st.markdown(f"""
+            - **Maximum |ψ|²**: {max_prob:.4f} at x = {max_prob_x:.3f}
+            - **Integral ∫|ψ|²dx**: {norm_check:.6f} (should be 1.000000)
+            - **Characteristic length x₀**: {x0:.3f}
+            - **Number of nodes**: {n} (inside the classically allowed region)
+            
+            For n = {n}, the wavefunction has {n} nodes (zeros) between the classical turning points.
+            """)
     
     else:  # 2D Oscillator
         st.markdown("### 2D Isotropic Harmonic Oscillator")
@@ -501,48 +583,117 @@ with tab3:
             plot_type = st.selectbox("Visualization", 
                                      ["3D Surface", "2D Heatmap", "Contour Plot"])
         
-        # Show equations for 2D
-        with st.expander("📐 2D Harmonic Oscillator Theory"):
+        # Detailed mathematical description
+        with st.expander("📐 Complete 2D Harmonic Oscillator Theory", expanded=True):
             st.markdown("""
-            ### Separable Solution
+            ### 1. The 2D Schrödinger Equation
             
-            For V(x,y) = ½mω²(x² + y²), the wavefunction separates:
+            For a particle of mass m in 2D with potential V(x,y):
             """)
             
+            st.latex(r"-\frac{\hbar^2}{2m}\left(\frac{\partial^2\psi}{\partial x^2} + \frac{\partial^2\psi}{\partial y^2}\right) + V(x,y)\psi = E\psi")
+            
+            st.markdown("For the isotropic 2D harmonic oscillator:")
+            st.latex(r"V(x,y) = \frac{1}{2}m\omega^2(x^2 + y^2)")
+            
+            st.markdown("""
+            ### 2. Separation of Variables
+            
+            Since V(x,y) = V_x(x) + V_y(y), we can write:
+            """)
+            st.latex(r"\psi(x,y) = X(x)Y(y)")
+            
+            st.markdown("Substituting and dividing by ψ = XY:")
+            st.latex(r"-\frac{\hbar^2}{2m}\left(\frac{1}{X}\frac{d^2X}{dx^2} + \frac{1}{Y}\frac{d^2Y}{dy^2}\right) + \frac{1}{2}m\omega^2(x^2 + y^2) = E")
+            
+            st.markdown("Rearranging:")
+            st.latex(r"\left[-\frac{\hbar^2}{2m}\frac{1}{X}\frac{d^2X}{dx^2} + \frac{1}{2}m\omega^2x^2\right] + \left[-\frac{\hbar^2}{2m}\frac{1}{Y}\frac{d^2Y}{dy^2} + \frac{1}{2}m\omega^2y^2\right] = E")
+            
+            st.markdown("""
+            ### 3. Independent 1D Oscillators
+            
+            Each bracket must equal a constant:
+            """)
+            
+            col1, col2 = st.columns(2)
+            with col1:
+                st.latex(r"-\frac{\hbar^2}{2m}\frac{d^2X}{dx^2} + \frac{1}{2}m\omega^2x^2X = E_xX")
+                st.latex(r"E_x = \hbar\omega(n_x + \frac{1}{2})")
+            
+            with col2:
+                st.latex(r"-\frac{\hbar^2}{2m}\frac{d^2Y}{dy^2} + \frac{1}{2}m\omega^2y^2Y = E_yY")
+                st.latex(r"E_y = \hbar\omega(n_y + \frac{1}{2})")
+            
+            st.markdown("With total energy:")
+            st.latex(r"E_{n_x,n_y} = E_x + E_y = \hbar\omega(n_x + n_y + 1)")
+            
+            st.markdown("""
+            ### 4. 2D Wavefunction
+            
+            The complete normalized wavefunction is:
+            """)
             st.latex(r"\psi_{n_x,n_y}(x,y) = \psi_{n_x}(x) \cdot \psi_{n_y}(y)")
             
-            st.latex(r"E_{n_x,n_y} = \hbar\omega(n_x + n_y + 1)")
+            st.markdown("Where each 1D wavefunction is:")
+            st.latex(r"\psi_n(u) = \left(\frac{m\omega}{\pi\hbar}\right)^{1/4} \frac{1}{\sqrt{2^n n!}} H_n\left(\sqrt{\frac{m\omega}{\hbar}}u\right) \exp\left(-\frac{m\omega u^2}{2\hbar}\right)")
             
             st.markdown("""
-            ### Degeneracy
+            ### 5. Normalization in 2D
             
-            The energy depends on N = nₓ + nᵧ, so states with same N are degenerate.
+            The 2D normalization condition is:
+            """)
+            st.latex(r"\int_{-\infty}^{\infty}\int_{-\infty}^{\infty} |\psi_{n_x,n_y}(x,y)|^2 \, dx \, dy = 1")
             
-            For example, E = 2ℏω can be achieved with:
-            - (nₓ, nᵧ) = (1, 0)
-            - (nₓ, nᵧ) = (0, 1)
+            st.markdown("Since ψ(x,y) = ψ_x(x)ψ_y(y):")
+            st.latex(r"= \int_{-\infty}^{\infty} |\psi_{n_x}(x)|^2 dx \cdot \int_{-\infty}^{\infty} |\psi_{n_y}(y)|^2 dy = 1 \times 1 = 1")
             
-            Degeneracy of level N is N + 1.
+            st.markdown("""
+            ### 6. Degeneracy
+            
+            Multiple quantum states can have the same energy. For total quantum number N = nₓ + nᵧ:
+            
+            | N | Energy | States | Degeneracy |
+            |---|--------|--------|------------|
+            | 0 | ℏω | (0,0) | 1 |
+            | 1 | 2ℏω | (1,0), (0,1) | 2 |
+            | 2 | 3ℏω | (2,0), (1,1), (0,2) | 3 |
+            | 3 | 4ℏω | (3,0), (2,1), (1,2), (0,3) | 4 |
+            
+            **General formula**: Degeneracy of level N is N + 1
+            """)
+            
+            st.markdown("""
+            ### 7. Circular Symmetry
+            
+            In polar coordinates (r, θ), the isotropic oscillator can also be solved using:
+            """)
+            st.latex(r"V(r) = \frac{1}{2}m\omega^2 r^2")
+            
+            st.markdown("""
+            This gives states labeled by radial quantum number n_r and angular momentum ℓ:
+            - Energy: E = ℏω(2n_r + |ℓ| + 1)
+            - The Cartesian and polar solutions are related but use different quantum numbers
             """)
         
-        # 2D Physics calculations
+        # 2D Physics calculations with proper normalization
         x0_2d = np.sqrt(1/omega_2d)
         E_2d = omega_2d * (nx + ny + 1)
         
         # Create 2D grid
         extent = max(3*x0_2d, np.sqrt(2*E_2d/omega_2d) + x0_2d)
-        x = np.linspace(-extent, extent, 100)
-        y = np.linspace(-extent, extent, 100)
+        x = np.linspace(-extent, extent, 150)
+        y = np.linspace(-extent, extent, 150)
         X, Y = np.meshgrid(x, y)
         
-        # Calculate 2D wavefunction
+        # Calculate 2D wavefunction with CORRECT normalization
         # First calculate 1D wavefunctions for x and y
         Hx = hermite(nx)
         Hy = hermite(ny)
         
-        # Normalization and xi coordinates
-        norm_x = (omega_2d/np.pi)**0.25 / np.sqrt(2**nx * factorial(nx))
-        norm_y = (omega_2d/np.pi)**0.25 / np.sqrt(2**ny * factorial(ny))
+        # Correct normalization factors
+        norm_x = np.sqrt(np.sqrt(omega_2d/np.pi) / (2**nx * factorial(nx)))
+        norm_y = np.sqrt(np.sqrt(omega_2d/np.pi) / (2**ny * factorial(ny)))
+        
         xi_x = np.sqrt(omega_2d) * X
         xi_y = np.sqrt(omega_2d) * Y
         
@@ -551,6 +702,11 @@ with tab3:
         psi_y = norm_y * Hy(xi_y) * np.exp(-xi_y**2 / 2)
         psi_2d = psi_x * psi_y
         prob_2d = np.abs(psi_2d)**2
+        
+        # Check normalization (using 2D integration)
+        dx = x[1] - x[0]
+        dy = y[1] - y[0]
+        norm_check_2d = np.sum(prob_2d) * dx * dy
         
         # Create visualization based on selection
         if plot_type == "3D Surface":
@@ -626,14 +782,126 @@ with tab3:
         
         st.plotly_chart(fig_2d, use_container_width=True)
         
-        # 2D Metrics
-        col1, col2, col3 = st.columns(3)
+        # 2D Metrics with normalization check
+        col1, col2, col3, col4 = st.columns(4)
         with col1:
             st.metric("Total Energy", f"E = {E_2d:.3f}ℏω")
         with col2:
-            st.metric("Total quantum number", f"N = {nx + ny}")
+            st.metric("Quantum numbers", f"({nx}, {ny})")
         with col3:
-            st.metric("Degeneracy", f"{nx + ny + 1} states at this energy")
+            st.metric("Degeneracy", f"{nx + ny + 1} states")
+        with col4:
+            st.metric("Normalization", f"∫∫|ψ|²dxdy = {norm_check_2d:.3f}")
+        
+        # Analysis of 2D probability distribution
+        with st.expander("📊 2D Probability Distribution Analysis"):
+            max_prob_2d = np.max(prob_2d)
+            max_idx = np.unravel_index(np.argmax(prob_2d), prob_2d.shape)
+            max_x = x[max_idx[1]]
+            max_y = y[max_idx[0]]
+            
+            st.markdown(f"""
+            ### Current State Analysis (nₓ={nx}, nᵧ={ny})
+            
+            - **Maximum |ψ|²**: {max_prob_2d:.4f} at (x,y) = ({max_x:.3f}, {max_y:.3f})
+            - **Normalization integral**: {norm_check_2d:.6f} (should be 1.000000)
+            - **Number of x-nodes**: {nx}
+            - **Number of y-nodes**: {ny}
+            - **Total nodes**: {nx + ny} nodal lines
+            
+            ### State Characteristics:
+            """)
+            
+            if nx == 0 and ny == 0:
+                st.markdown("- **Ground state**: Gaussian blob centered at origin")
+            elif nx == ny:
+                st.markdown("- **Symmetric state**: Same number of nodes in x and y")
+            elif nx == 0 or ny == 0:
+                st.markdown("- **1D-like state**: Nodes only in one direction")
+            else:
+                st.markdown(f"- **General state**: {nx} nodes in x, {ny} nodes in y")
+            
+            st.markdown(f"""
+            ### Energy Degeneracy:
+            
+            States with the same energy E = {E_2d:.3f}ℏω:
+            """)
+            
+            # List all degenerate states
+            N = nx + ny
+            degenerate_states = []
+            for i in range(N + 1):
+                degenerate_states.append(f"({i}, {N-i})")
+            st.markdown("- " + ", ".join(degenerate_states))
+    
+    # Educational content for harmonic oscillator
+    with st.expander("📚 Physical Insights and Applications"):
+        st.markdown("""
+        ### Why is the Harmonic Oscillator So Important?
+        
+        1. **Ubiquitous in Physics**:
+           - Small oscillations around equilibrium are harmonic
+           - Applies to molecules, atoms in crystals, electromagnetic fields
+           - Foundation of quantum field theory (creation/annihilation operators)
+        
+        2. **Exactly Solvable**:
+           - One of few systems with exact analytical solutions
+           - Solutions involve Hermite polynomials
+           - Energy levels are equally spaced
+        
+        3. **Zero-Point Energy**:
+           - Ground state energy E₀ = ½ℏω ≠ 0
+           - Consequence of uncertainty principle
+           - Particle can never be at rest at x = 0
+        
+        4. **Classical Limit**:
+           - For large n, probability density approaches classical distribution
+           - Time spent at position x ∝ 1/|velocity(x)|
+           - Demonstrates correspondence principle
+        
+        ### Applications:
+        
+        **Molecular Vibrations**:
+        - Diatomic molecules vibrate like quantum harmonic oscillators
+        - Infrared spectroscopy measures transitions: ΔE = ℏω
+        - Selection rule: Δn = ±1 for dipole transitions
+        
+        **Quantum Optics**:
+        - Electromagnetic field modes are harmonic oscillators
+        - Photon number states |n⟩ correspond to energy levels
+        - Coherent states are displaced ground states
+        
+        **Solid State Physics**:
+        - Phonons: quantized lattice vibrations
+        - Einstein model: N independent oscillators
+        - Explains heat capacity at low temperatures
+        
+        **Quantum Computing**:
+        - Trapped ions in harmonic potentials
+        - Vibrational states used as qubits
+        - Sideband cooling to ground state
+        
+        ### 2D Oscillator Special Properties:
+        
+        1. **Isotropic Case** (ωₓ = ωᵧ):
+           - High degeneracy due to symmetry
+           - Can be solved in polar coordinates
+           - Related to 2D hydrogen atom
+        
+        2. **Anisotropic Case** (ωₓ ≠ ωᵧ):
+           - Breaks degeneracy
+           - Lissajous-like classical orbits
+           - Important in ion traps
+        
+        ### Mathematical Beauty:
+        
+        The ladder operators â and â† connect different energy levels:
+        - â|n⟩ = √n|n-1⟩ (lowering operator)
+        - â†|n⟩ = √(n+1)|n+1⟩ (raising operator)
+        - [â, â†] = 1 (canonical commutation relation)
+        
+        For 2D, we have two sets of ladder operators (âₓ, âₓ†) and (âᵧ, âᵧ†) that commute with each other.
+        """)
     
     # Educational content for harmonic oscillator
     with st.expander("📚 Physical Insights and Applications"):
