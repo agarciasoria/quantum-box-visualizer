@@ -49,24 +49,30 @@ with tab1:
     prob = psi**2
     E = (n**2 * np.pi**2) / (2 * L**2)
     
+    # Calculate proper y-axis range
+    psi_max = np.max(np.abs(psi)) * 1.2
+    prob_max = np.max(prob) * 1.2
+    y_max = max(psi_max, prob_max)
+    y_min = -psi_max
+    
     # Create the plot
     fig1 = go.Figure()
     
     # Add box walls if enabled
     if show_box:
         # Left wall
-        fig1.add_shape(type="line", x0=0, y0=-1, x1=0, y1=1.5,
+        fig1.add_shape(type="line", x0=0, y0=y_min, x1=0, y1=y_max,
             line=dict(color="gray", width=4))
         # Right wall
-        fig1.add_shape(type="line", x0=L, y0=-1, x1=L, y1=1.5,
+        fig1.add_shape(type="line", x0=L, y0=y_min, x1=L, y1=y_max,
             line=dict(color="gray", width=4))
         # Box bottom
-        fig1.add_shape(type="line", x0=0, y0=-1, x1=L, y1=-1,
+        fig1.add_shape(type="line", x0=0, y0=y_min, x1=L, y1=y_min,
             line=dict(color="gray", width=2))
         # Shaded regions outside
-        fig1.add_shape(type="rect", x0=-1, y0=-1, x1=0, y1=1.5,
+        fig1.add_shape(type="rect", x0=-1, y0=y_min, x1=0, y1=y_max,
             fillcolor="rgba(128,128,128,0.2)", line=dict(color="rgba(0,0,0,0)"))
-        fig1.add_shape(type="rect", x0=L, y0=-1, x1=L+1, y1=1.5,
+        fig1.add_shape(type="rect", x0=L, y0=y_min, x1=L+1, y1=y_max,
             fillcolor="rgba(128,128,128,0.2)", line=dict(color="rgba(0,0,0,0)"))
     
     # Add wavefunction and probability
@@ -82,7 +88,7 @@ with tab1:
     fig1.update_layout(
         title=dict(text=f"Quantum State n={n}, Energy E={E:.3f}", font=dict(size=20)),
         xaxis=dict(title="Position (x)", range=[-0.5, L+0.5]),
-        yaxis=dict(title="Amplitude", range=[-1.2, 1.5]),
+        yaxis=dict(title="Amplitude", range=[y_min, y_max]),
         hovermode='x unified',
         showlegend=True,
         height=500
@@ -104,7 +110,7 @@ with tab1:
 # ============================================
 with tab2:
     st.header("Quantum Tunneling Through a Barrier")
-    st.write("Visualizing quantum tunneling - a particle passing through a classically forbidden barrier")
+    st.write("A quantum particle encountering a potential barrier - demonstrating wave-particle duality")
     
     # Controls in columns
     col1, col2, col3 = st.columns(3)
@@ -119,17 +125,57 @@ with tab2:
         a = st.slider("Barrier Width (a)", 0.5, 5.0, 2.0, 0.1,
                       help="Width of the potential barrier")
     
-    # Show tunneling equations
-    show_tunnel_eqs = st.checkbox("Show tunneling equations", value=True)
-    
-    if show_tunnel_eqs:
-        st.markdown("### 📐 Transmission Coefficient")
+    # Show tunneling equations and derivation
+    with st.expander("📐 Mathematical Derivation", expanded=True):
+        st.markdown("""
+        ### Time-Independent Schrödinger Equation
+        
+        For a particle of mass m encountering a rectangular barrier:
+        """)
+        
+        st.latex(r"-\frac{\hbar^2}{2m}\frac{d^2\psi}{dx^2} + V(x)\psi = E\psi")
+        
+        st.markdown("""
+        Where the potential is:
+        - V(x) = 0 for x < 0 (Region I)
+        - V(x) = V₀ for 0 ≤ x ≤ a (Region II)  
+        - V(x) = 0 for x > a (Region III)
+        
+        ### Solutions in Each Region
+        """)
+        
+        col1, col2 = st.columns(2)
+        
+        with col1:
+            st.markdown("**Region I & III:** V = 0")
+            st.latex(r"k_1 = \sqrt{\frac{2mE}{\hbar^2}}")
+            st.latex(r"\psi_I = e^{ik_1x} + Re^{-ik_1x}")
+            st.latex(r"\psi_{III} = Te^{ik_1x}")
+        
+        with col2:
+            st.markdown("**Region II:** V = V₀")
+            if E < V0:
+                st.latex(r"\kappa = \sqrt{\frac{2m(V_0-E)}{\hbar^2}}")
+                st.latex(r"\psi_{II} = Ae^{\kappa x} + Be^{-\kappa x}")
+            else:
+                st.latex(r"k_2 = \sqrt{\frac{2m(E-V_0)}{\hbar^2}}")
+                st.latex(r"\psi_{II} = Ce^{ik_2x} + De^{-ik_2x}")
+        
+        st.markdown("""
+        ### Transmission Coefficient
+        
+        By matching boundary conditions at x = 0 and x = a (continuity of ψ and dψ/dx):
+        """)
+        
         if E < V0:
-            st.latex(r"T = \frac{1}{1 + \frac{V_0^2 \sinh^2(\kappa a)}{4E(V_0-E)}}")
-            st.latex(r"\kappa = \sqrt{\frac{2m(V_0-E)}{\hbar^2}}")
+            st.markdown("**Tunneling Case (E < V₀):**")
+            st.latex(r"T = \frac{|T|^2}{|1|^2} = \frac{1}{1 + \frac{V_0^2 \sinh^2(\kappa a)}{4E(V_0-E)}}")
+            st.markdown("For thick barriers (κa >> 1):")
+            st.latex(r"T \approx \frac{16E(V_0-E)}{V_0^2}e^{-2\kappa a}")
         else:
+            st.markdown("**Above Barrier Case (E > V₀):**")
             st.latex(r"T = \frac{1}{1 + \frac{V_0^2 \sin^2(k_2 a)}{4E(E-V_0)}}")
-            st.latex(r"k_2 = \sqrt{\frac{2m(E-V_0)}{\hbar^2}}")
+            st.markdown("Notice: T = 1 when sin(k₂a) = 0, giving resonant transmission!")
     
     # Physics calculations
     x = np.linspace(-8, 12, 2000)
@@ -179,7 +225,13 @@ with tab2:
     # Calculate probability density
     psi_prob = np.abs(psi)**2
     
-    # Create plot
+    # Calculate proper y-axis range
+    psi_real_max = np.max(np.abs(np.real(psi))) * 1.2
+    prob_max = np.max(psi_prob) * 1.2
+    pot_max = V0 * 1.2
+    y_max = max(psi_real_max, prob_max, pot_max, E + 0.5)
+    y_min = -psi_real_max
+        # Create plot
     fig2 = go.Figure()
     
     # Potential barrier
@@ -199,11 +251,11 @@ with tab2:
     fig2.add_trace(go.Scatter(x=x, y=psi_prob, name="|ψ|²",
                              line=dict(color='red', width=2)))
     
-    # Style
+    # Style with proper y-axis range
     fig2.update_layout(
         title=f"Quantum Tunneling - E/V₀ = {E/V0:.2f}",
         xaxis=dict(title="Position (x)", range=[-8, 12]),
-        yaxis=dict(title="Energy / Amplitude", range=[-0.5, max(V0+0.5, 2.5)]),
+        yaxis=dict(title="Energy / Amplitude", range=[y_min, y_max]),
         hovermode='x unified',
         showlegend=True,
         height=500
@@ -233,8 +285,8 @@ with tab2:
         st.metric("Regime", regime,
                   delta="E < V₀" if E < V0 else "E > V₀")
     
-        # Educational info
-    with st.expander("📚 Understanding Quantum Tunneling"):
+    # Educational info
+    with st.expander("📚 Physical Interpretation and Applications"):
         st.markdown(f"""
         ### Current Setup
         - **Particle Energy**: E = {E:.2f}
@@ -253,56 +305,80 @@ with tab2:
             The particle has **less energy than the barrier height**, yet there's a **{T:.1%} chance** 
             it will appear on the other side! This is purely quantum mechanical - classically impossible.
             
-            - The wavefunction decays exponentially inside the barrier
-            - Thicker barriers → less tunneling
-            - Higher barriers → less tunneling
-            - Decay length scale: 1/κ = {1/kappa:.2f}
+            - **Wavefunction decay**: The wavefunction decays exponentially inside the barrier
+            - **Decay length**: 1/κ = {1/kappa:.2f} (characteristic penetration depth)
+            - **Width dependence**: Transmission ∝ exp(-2κa) for thick barriers
+            - **Energy dependence**: Higher E → larger transmission
             """)
         else:
             st.markdown(f"""
             The particle has **more energy than the barrier**, so classically it should always pass.
             But quantum mechanically, there's still a **{R:.1%} chance of reflection**!
             
-            - The wavefunction oscillates inside the barrier
-            - Interference effects cause partial reflection
-            - At certain energies, transmission can be 100% (resonances)
+            - **Wave interference**: Partial waves reflected at x=0 and x=a interfere
+            - **Resonances**: When k₂a = nπ, we get T = 100% (perfect transmission)
+            - **Current k₂a = {k2*a:.2f}** (nearest resonance at {np.round(k2*a/np.pi)*np.pi:.2f})
             """)
         
         st.markdown("""
-        ### Key Quantum Effects
+        ### Real-World Applications of Quantum Tunneling
         
-        1. **Tunneling** (E < V₀): Particles can penetrate classically forbidden regions
-        2. **Quantum Reflection** (E > V₀): Even with enough energy, particles can reflect
-        3. **Exponential Sensitivity**: Transmission probability depends exponentially on barrier width
-        4. **Wave Nature**: The particle behaves as a wave, not a classical point particle
+        1. **Scanning Tunneling Microscope (STM)**
+           - Electrons tunnel between tip and surface
+           - Current ∝ exp(-2κd) where d is tip-surface distance
+           - Achieves atomic resolution imaging
         
-        ### Applications of Tunneling
+        2. **Nuclear Fusion in Stars**
+           - Protons tunnel through Coulomb barrier
+           - Without tunneling, stars couldn't shine!
+           - Sun's core temperature too low for classical fusion
         
-        - **Scanning Tunneling Microscope (STM)**: Images individual atoms
-        - **Nuclear Fusion**: How protons overcome Coulomb barrier in stars
-        - **Radioactive Decay**: Alpha particles escape the nucleus
-        - **Tunnel Diodes**: Ultra-fast electronic switches
-        - **Quantum Computing**: Josephson junctions in superconducting qubits
+        3. **Radioactive Alpha Decay**
+           - Alpha particles tunnel out of nuclear potential
+           - Explains Geiger-Nuttall law for decay rates
+        
+        4. **Semiconductor Devices**
+           - Tunnel diodes: negative differential resistance
+           - Flash memory: electrons tunnel through oxide barrier
+           - Josephson junctions in quantum computers
+        
+        5. **Chemical Reactions**
+           - Proton transfer in DNA base pairs
+           - Enzyme catalysis enhancement
+           - Quantum biology effects
         """)
 
-# Add footer
-st.markdown("---")
-st.markdown("Created with ❤️ using Streamlit | Quantum Mechanics Visualization Suite")
-
-# Sidebar info
+# Add "Learn More" section with proper derivation
 with st.sidebar:
-    st.markdown("### 🎓 About")
+    st.markdown("### 🎓 About This Visualizer")
     st.markdown("""
     This app visualizes fundamental quantum mechanical systems:
     
     - **Particle in a Box**: Energy quantization in confined systems
-    - **Quantum Tunneling**: Particles passing through barriers
+    - **Quantum Tunneling**: Particles passing through classically forbidden barriers
     
-    More systems coming soon!
+    More quantum systems coming soon!
     """)
     
-    st.markdown("### 🔗 Resources")
+    st.markdown("### 📚 References")
     st.markdown("""
-    - [Quantum Mechanics (Wikipedia)](https://en.wikipedia.org/wiki/Quantum_mechanics)
-    - [Interactive Quantum Mechanics](https://phet.colorado.edu/en/simulations/quantum-tunneling)
+    **Textbooks:**
+    - Griffiths, D.J. *Introduction to Quantum Mechanics* (3rd ed.)
+    - Shankar, R. *Principles of Quantum Mechanics* (2nd ed.)
+    
+    **Interactive Resources:**
+    - [PhET Quantum Simulations](https://phet.colorado.edu/en/simulations/quantum-tunneling)
     """)
+    
+    st.markdown("### 🔢 Units")
+    st.markdown("""
+    This simulation uses natural units where:
+    - ℏ = 1 (reduced Planck constant)
+    - 2m = 1 (twice the particle mass)
+    - All energies in units of ℏ²/2m
+    - All lengths in units of √(ℏ/2mE₀)
+    """)
+
+# Footer
+st.markdown("---")
+st.markdown("Created with ❤️ using Streamlit | Quantum Mechanics Visualization Suite")
