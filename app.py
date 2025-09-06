@@ -903,60 +903,6 @@ with tab3:
         For 2D, we have two sets of ladder operators (âₓ, âₓ†) and (âᵧ, âᵧ†) that commute with each other.
         """)
     
-    # Educational content for harmonic oscillator
-    with st.expander("📚 Physical Insights and Applications"):
-        st.markdown("""
-        ### Why is the Harmonic Oscillator So Important?
-        
-        1. **Ubiquitous in Physics**:
-           - Small oscillations around equilibrium are harmonic
-           - Applies to molecules, atoms in crystals, electromagnetic fields
-           - Foundation of quantum field theory (creation/annihilation operators)
-        
-        2. **Exactly Solvable**:
-           - One of few systems with exact analytical solutions
-           - Solutions involve Hermite polynomials
-           - Energy levels are equally spaced
-        
-        3. **Zero-Point Energy**:
-           - Ground state energy E₀ = ½ℏω ≠ 0
-           - Consequence of uncertainty principle
-           - Particle can never be at rest at x = 0
-        
-        4. **Classical Limit**:
-           - For large n, probability density approaches classical distribution
-           - Time spent at position x ∝ 1/|velocity(x)|
-           - Demonstrates correspondence principle
-        
-        ### Applications:
-        
-        **Molecular Vibrations**:
-        - Diatomic molecules vibrate like quantum harmonic oscillators
-        - Infrared spectroscopy measures transitions: ΔE = ℏω
-        - Selection rule: Δn = ±1 for dipole transitions
-        
-        **Quantum Optics**:
-        - Electromagnetic field modes are harmonic oscillators
-        - Photon number states |n⟩ correspond to energy levels
-        - Coherent states are displaced ground states
-        
-        **Solid State Physics**:
-        - Phonons: quantized lattice vibrations
-        - Einstein model: N independent oscillators
-        - Explains heat capacity at low temperatures
-        
-        **Quantum Computing**:
-        - Trapped ions in harmonic potentials
-        - Vibrational states used as qubits
-        - Sideband cooling to ground state
-        
-        ### Mathematical Beauty:
-        
-        The ladder operators â and â† connect different energy levels:
-        - â|n⟩ = √n|n-1⟩ (lowering operator)
-        - â†|n⟩ = √(n+1)|n+1⟩ (raising operator)
-        - [â, â†] = 1 (canonical commutation relation)
-        """)
 
 with st.sidebar:
     st.markdown("### 🎓 About This Visualizer")
