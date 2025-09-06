@@ -2,6 +2,9 @@ import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
 
+from scipy.special import hermite
+from scipy.misc import factorial
+
 # Page config
 st.set_page_config(page_title="Quantum Mechanics Visualizer", page_icon="⚛️", layout="wide")
 
@@ -10,7 +13,7 @@ st.title("⚛️ Quantum Mechanics Visualizer")
 st.markdown("Interactive visualizations of quantum mechanical systems")
 
 # Create tabs
-tab1, tab2 = st.tabs(["📦 Particle in a Box", "⚡ Quantum Tunneling"])
+tab1, tab2, tab3 = st.tabs(["📦 Particle in a Box", "⚡ Quantum Tunneling", "🌊 Harmonic Oscillator"])
 
 # ============================================
 # TAB 1: PARTICLE IN A BOX
@@ -349,6 +352,345 @@ with tab2:
         """)
 
 # Add "Learn More" section with proper derivation
+# ============================================
+# TAB 3: QUANTUM HARMONIC OSCILLATOR
+# ============================================
+with tab3:
+    st.header("Quantum Harmonic Oscillator")
+    st.write("Visualizing quantum states in parabolic potentials - the most important exactly solvable system")
+    
+    # Choose 1D or 2D
+    oscillator_dim = st.radio("Select dimension:", ["1D Oscillator", "2D Oscillator"], horizontal=True)
+    
+    if oscillator_dim == "1D Oscillator":
+        # 1D Controls
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            n = st.slider("Quantum number (n)", 0, 10, 0,
+                         help="n = 0 is the ground state")
+        with col2:
+            omega = st.slider("Frequency (ω)", 0.5, 2.0, 1.0, 0.1,
+                             help="Oscillator frequency")
+        with col3:
+            show_classical = st.checkbox("Show classical turning points", value=True)
+            show_probability = st.checkbox("Show |ψ|²", value=True)
+        
+        # Show equations
+        with st.expander("📐 Mathematical Description", expanded=True):
+            st.markdown("### The Quantum Harmonic Oscillator")
+            
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                st.markdown("**Potential Energy:**")
+                st.latex(r"V(x) = \frac{1}{2}m\omega^2 x^2")
+                
+                st.markdown("**Schrödinger Equation:**")
+                st.latex(r"-\frac{\hbar^2}{2m}\frac{d^2\psi}{dx^2} + \frac{1}{2}m\omega^2 x^2\psi = E\psi")
+            
+            with col2:
+                st.markdown("**Energy Eigenvalues:**")
+                st.latex(r"E_n = \hbar\omega\left(n + \frac{1}{2}\right)")
+                
+                st.markdown("**Ground State Energy:**")
+                st.latex(r"E_0 = \frac{1}{2}\hbar\omega")
+            
+            st.markdown("### Wavefunctions")
+            st.latex(r"\psi_n(x) = \left(\frac{m\omega}{\pi\hbar}\right)^{1/4} \frac{1}{\sqrt{2^n n!}} H_n\left(\sqrt{\frac{m\omega}{\hbar}}x\right) \exp\left(-\frac{m\omega x^2}{2\hbar}\right)")
+            
+            st.markdown("""
+            Where:
+            - H_n are Hermite polynomials
+            - The characteristic length scale is: x₀ = √(ℏ/mω)
+            - Classical turning points at: x = ±√(2E/mω²)
+            """)
+        
+        # Physics calculations (using natural units where ℏ = m = 1)
+        x0 = np.sqrt(1/(omega))  # characteristic length
+        E_n = omega * (n + 0.5)
+        
+        # Classical turning points
+        x_turn = np.sqrt(2*E_n/omega)
+        
+        # Grid
+        x_max = max(3*x0, x_turn + x0)
+        x = np.linspace(-x_max, x_max, 1000)
+        
+        # Potential
+        V = 0.5 * omega**2 * x**2
+        
+        # Hermite polynomial and wavefunction
+        H_n = hermite(n)
+        prefactor = (omega/np.pi)**0.25 / np.sqrt(2**n * factorial(n))
+        xi = np.sqrt(omega) * x
+        psi = prefactor * H_n(xi) * np.exp(-xi**2 / 2)
+        psi_squared = psi**2
+        
+        # Normalize for display (scale to fit nicely with potential)
+        psi_display = psi * 0.5 * E_n / np.max(np.abs(psi)) + E_n
+        psi_squared_display = psi_squared * 0.5 * E_n / np.max(psi_squared) + E_n
+        
+        # Create plot
+        fig_1d = go.Figure()
+        
+        # Potential
+        fig_1d.add_trace(go.Scatter(x=x, y=V, name="V(x) = ½mω²x²",
+                                   line=dict(color='black', width=3)))
+        
+        # Energy level
+        fig_1d.add_hline(y=E_n, line_dash="dash", line_color="green",
+                        annotation_text=f"E_{n} = {E_n:.2f}")
+        
+        # Classical turning points
+        if show_classical:
+            fig_1d.add_vline(x=-x_turn, line_dash="dot", line_color="gray",
+                            annotation_text="Classical turning point")
+            fig_1d.add_vline(x=x_turn, line_dash="dot", line_color="gray")
+            
+            # Shaded classically forbidden region
+            fig_1d.add_shape(type="rect", x0=-x_max, y0=0, x1=-x_turn, y1=E_n,
+                            fillcolor="rgba(255,0,0,0.1)", line=dict(width=0))
+            fig_1d.add_shape(type="rect", x0=x_turn, y0=0, x1=x_max, y1=E_n,
+                            fillcolor="rgba(255,0,0,0.1)", line=dict(width=0))
+        
+        # Wavefunction (shifted to energy level)
+        fig_1d.add_trace(go.Scatter(x=x, y=psi_display, name=f"ψ_{n}(x)",
+                                   line=dict(color='blue', width=2)))
+        
+        # Probability density
+        if show_probability:
+            fig_1d.add_trace(go.Scatter(x=x, y=psi_squared_display, name=f"|ψ_{n}(x)|²",
+                                       line=dict(color='red', width=2), fill='tonexty'))
+        
+        # Style
+        fig_1d.update_layout(
+            title=f"1D Quantum Harmonic Oscillator - n = {n}",
+            xaxis=dict(title="Position (x)", range=[-x_max, x_max]),
+            yaxis=dict(title="Energy", range=[0, max(V.max(), E_n + 1)]),
+            hovermode='x unified',
+            height=500
+        )
+        
+        st.plotly_chart(fig_1d, use_container_width=True)
+        
+        # Metrics
+        col1, col2, col3, col4 = st.columns(4)
+        with col1:
+            st.metric("Energy", f"E_{n} = {E_n:.3f}")
+        with col2:
+            st.metric("Zero-point energy", f"E₀ = {omega/2:.3f}")
+        with col3:
+            st.metric("Level spacing", f"ΔE = {omega:.3f}")
+        with col4:
+            st.metric("Classical extent", f"±{x_turn:.3f}")
+    
+    else:  # 2D Oscillator
+        st.markdown("### 2D Isotropic Harmonic Oscillator")
+        st.write("Independent oscillators in x and y directions: ψ(x,y) = ψₙₓ(x) × ψₙᵧ(y)")
+        
+        # 2D Controls
+        col1, col2, col3, col4 = st.columns(4)
+        
+        with col1:
+            nx = st.slider("Quantum number nₓ", 0, 5, 0)
+        with col2:
+            ny = st.slider("Quantum number nᵧ", 0, 5, 0)
+        with col3:
+            omega_2d = st.slider("Frequency ω", 0.5, 2.0, 1.0, 0.1)
+        with col4:
+            plot_type = st.selectbox("Visualization", 
+                                     ["3D Surface", "2D Heatmap", "Contour Plot"])
+        
+        # Show equations for 2D
+        with st.expander("📐 2D Harmonic Oscillator Theory"):
+            st.markdown("""
+            ### Separable Solution
+            
+            For V(x,y) = ½mω²(x² + y²), the wavefunction separates:
+            """)
+            
+            st.latex(r"\psi_{n_x,n_y}(x,y) = \psi_{n_x}(x) \cdot \psi_{n_y}(y)")
+            
+            st.latex(r"E_{n_x,n_y} = \hbar\omega(n_x + n_y + 1)")
+            
+            st.markdown("""
+            ### Degeneracy
+            
+            The energy depends on N = nₓ + nᵧ, so states with same N are degenerate.
+            
+            For example, E = 2ℏω can be achieved with:
+            - (nₓ, nᵧ) = (1, 0)
+            - (nₓ, nᵧ) = (0, 1)
+            
+            Degeneracy of level N is N + 1.
+            """)
+        
+        # 2D Physics calculations
+        x0_2d = np.sqrt(1/omega_2d)
+        E_2d = omega_2d * (nx + ny + 1)
+        
+        # Create 2D grid
+        extent = max(3*x0_2d, np.sqrt(2*E_2d/omega_2d) + x0_2d)
+        x = np.linspace(-extent, extent, 100)
+        y = np.linspace(-extent, extent, 100)
+        X, Y = np.meshgrid(x, y)
+        
+        # Calculate 2D wavefunction
+        # First calculate 1D wavefunctions for x and y
+        Hx = hermite(nx)
+        Hy = hermite(ny)
+        
+        # Normalization and xi coordinates
+        norm_x = (omega_2d/np.pi)**0.25 / np.sqrt(2**nx * factorial(nx))
+        norm_y = (omega_2d/np.pi)**0.25 / np.sqrt(2**ny * factorial(ny))
+        xi_x = np.sqrt(omega_2d) * X
+        xi_y = np.sqrt(omega_2d) * Y
+        
+        # 2D wavefunction
+        psi_x = norm_x * Hx(xi_x) * np.exp(-xi_x**2 / 2)
+        psi_y = norm_y * Hy(xi_y) * np.exp(-xi_y**2 / 2)
+        psi_2d = psi_x * psi_y
+        prob_2d = np.abs(psi_2d)**2
+        
+        # Create visualization based on selection
+        if plot_type == "3D Surface":
+            fig_2d = go.Figure(data=[
+                go.Surface(
+                    x=x, y=y, z=prob_2d,
+                    colorscale='Viridis',
+                    name='|ψ(x,y)|²',
+                    contours=dict(
+                        z=dict(show=True, usecolormap=True, highlightcolor="limegreen", project_z=True)
+                    )
+                )
+            ])
+            
+            fig_2d.update_layout(
+                title=f"2D Harmonic Oscillator - |ψ_{nx},{ny}(x,y)|²",
+                scene=dict(
+                    xaxis_title="x",
+                    yaxis_title="y",
+                    zaxis_title="|ψ|²",
+                    camera=dict(eye=dict(x=1.5, y=1.5, z=1.5))
+                ),
+                height=600
+            )
+        
+        elif plot_type == "2D Heatmap":
+            fig_2d = go.Figure(data=go.Heatmap(
+                x=x, y=y, z=prob_2d,
+                colorscale='Viridis',
+                colorbar=dict(title="|ψ|²")
+            ))
+            
+            fig_2d.update_layout(
+                title=f"2D Harmonic Oscillator - Probability Density (nₓ={nx}, nᵧ={ny})",
+                xaxis_title="x",
+                yaxis_title="y",
+                height=600,
+                width=700,
+                xaxis=dict(scaleanchor="y", scaleratio=1),
+                yaxis=dict(scaleanchor="x", scaleratio=1)
+            )
+        
+        else:  # Contour Plot
+            fig_2d = go.Figure(data=go.Contour(
+                x=x, y=y, z=prob_2d,
+                colorscale='Viridis',
+                contours=dict(showlabels=True, labelfont=dict(size=12)),
+                colorbar=dict(title="|ψ|²")
+            ))
+            
+            # Add nodal lines (where psi = 0, shown as white contours)
+            fig_2d.add_trace(go.Contour(
+                x=x, y=y, z=psi_2d,
+                showscale=False,
+                contours=dict(
+                    start=0, end=0, size=0.1,
+                    coloring='lines',
+                    showlabels=False
+                ),
+                line=dict(color='white', width=2),
+                name='Nodal lines'
+            ))
+            
+            fig_2d.update_layout(
+                title=f"2D Harmonic Oscillator - Contour Plot (nₓ={nx}, nᵧ={ny})",
+                xaxis_title="x",
+                yaxis_title="y",
+                height=600,
+                width=700,
+                xaxis=dict(scaleanchor="y", scaleratio=1),
+                yaxis=dict(scaleanchor="x", scaleratio=1)
+            )
+        
+        st.plotly_chart(fig_2d, use_container_width=True)
+        
+        # 2D Metrics
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            st.metric("Total Energy", f"E = {E_2d:.3f}ℏω")
+        with col2:
+            st.metric("Total quantum number", f"N = {nx + ny}")
+        with col3:
+            st.metric("Degeneracy", f"{nx + ny + 1} states at this energy")
+    
+    # Educational content for harmonic oscillator
+    with st.expander("📚 Physical Insights and Applications"):
+        st.markdown("""
+        ### Why is the Harmonic Oscillator So Important?
+        
+        1. **Ubiquitous in Physics**:
+           - Small oscillations around equilibrium are harmonic
+           - Applies to molecules, atoms in crystals, electromagnetic fields
+           - Foundation of quantum field theory (creation/annihilation operators)
+        
+        2. **Exactly Solvable**:
+           - One of few systems with exact analytical solutions
+           - Solutions involve Hermite polynomials
+           - Energy levels are equally spaced
+        
+        3. **Zero-Point Energy**:
+           - Ground state energy E₀ = ½ℏω ≠ 0
+           - Consequence of uncertainty principle
+           - Particle can never be at rest at x = 0
+        
+        4. **Classical Limit**:
+           - For large n, probability density approaches classical distribution
+           - Time spent at position x ∝ 1/|velocity(x)|
+           - Demonstrates correspondence principle
+        
+        ### Applications:
+        
+        **Molecular Vibrations**:
+        - Diatomic molecules vibrate like quantum harmonic oscillators
+        - Infrared spectroscopy measures transitions: ΔE = ℏω
+        - Selection rule: Δn = ±1 for dipole transitions
+        
+        **Quantum Optics**:
+        - Electromagnetic field modes are harmonic oscillators
+        - Photon number states |n⟩ correspond to energy levels
+        - Coherent states are displaced ground states
+        
+        **Solid State Physics**:
+        - Phonons: quantized lattice vibrations
+        - Einstein model: N independent oscillators
+        - Explains heat capacity at low temperatures
+        
+        **Quantum Computing**:
+        - Trapped ions in harmonic potentials
+        - Vibrational states used as qubits
+        - Sideband cooling to ground state
+        
+        ### Mathematical Beauty:
+        
+        The ladder operators â and â† connect different energy levels:
+        - â|n⟩ = √n|n-1⟩ (lowering operator)
+        - â†|n⟩ = √(n+1)|n+1⟩ (raising operator)
+        - [â, â†] = 1 (canonical commutation relation)
+        """)
+
 with st.sidebar:
     st.markdown("### 🎓 About This Visualizer")
     st.markdown("""
