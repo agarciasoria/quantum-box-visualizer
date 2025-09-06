@@ -1,9 +1,8 @@
 import streamlit as st
 import numpy as np
 import plotly.graph_objects as go
-
 from scipy.special import hermite
-from scipy.misc import factorial
+from math import factorial  # Using math.factorial which is standard
 
 # Page config
 st.set_page_config(page_title="Quantum Mechanics Visualizer", page_icon="⚛️", layout="wide")
